@@ -36,11 +36,17 @@
       apiOptions = _.extend({
         'apikey': this.options.apikey
       }, functionArgs);
+      postData = querystring.stringify(apiOptions);
       httpOptions = _.extend(this.options, {
-        path: rootPath + functionName + '?' + querystring.stringify(apiOptions)
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': postData.length
+        },
+        path: rootPath + functionName
       });
       chunks = [];
-      req = retriever.get(httpOptions, function(res) {
+      req = retriever.request(httpOptions, function(res) {
         res.on('data', function(data) {
           return chunks.push(data);
         });
@@ -66,6 +72,8 @@
           }
         });
       });
+      req.write(postData);
+      req.end();
       return req.on('error', function(error) {
         return callback({
           code: -1,
